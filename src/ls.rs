@@ -1,5 +1,3 @@
-use std::os::unix::ucred::impl_linux;
-
 use crate::data_structs::{Reservation, Zone, Vehicle};
 
 pub struct LocalSearch<'a>
@@ -11,7 +9,7 @@ pub struct LocalSearch<'a>
 
 impl LocalSearch<'_> 
 {
-    pub fn new(res: Vec<Reservation>, zon: Vec<Zone>, veh: Vec<Vehicle>) -> LocalSearch
+    pub fn new<'a>(res: Vec<Reservation<'a>>, zon: Vec<Zone>, veh: Vec<Vehicle<'a>>) -> LocalSearch<'a>
     {
         LocalSearch { reservations: res, zones: zon, vehicle: veh }
     }
