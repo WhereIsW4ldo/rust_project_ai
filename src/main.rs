@@ -1,8 +1,8 @@
 pub mod data_structs;
 pub mod parser;
-
-use std::env;
+pub mod ls;
 
 fn main() {
-    parser::read_file("input/toy1.csv")
+    let (res, zone, veh) = parser::read_file("input/toy1.csv");
+
 }

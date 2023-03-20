@@ -9,7 +9,7 @@ pub struct Zone
 pub struct Vehicle<'a>
 {
     pub id: i32,
-    pub zone: &'a Zone
+    pub zone: &'a Option<Zone>
 }
 
 #[derive(Debug)]
