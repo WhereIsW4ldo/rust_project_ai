@@ -24,11 +24,11 @@ pub fn read_file(filepath: &str) -> (Vec<Reservation>, Vec<Zone>, Vec<Vehicle>)
         if i == 0 // get amount of reservations
         {
             let mut string = String::from(contents[0].split(": ").collect::<Vec<&str>>()[1]);
-            if string.ends_with('\n')
+            if string.ends_with('\r')
             {
                 string.pop();
             }
-            if string.ends_with('\r')
+            if string.ends_with('\n')
             {
                 string.pop();
             }
@@ -53,11 +53,11 @@ pub fn read_file(filepath: &str) -> (Vec<Reservation>, Vec<Zone>, Vec<Vehicle>)
             }
             let p1: i32 = contents[6].parse().unwrap();
             let mut string = String::from(contents[7]);
-            if string.ends_with('\n')
+            if string.ends_with('\r')
             {
                 string.pop();
             }
-            if string.ends_with('\r')
+            if string.ends_with('\n')
             {
                 string.pop();
             }
@@ -71,11 +71,11 @@ pub fn read_file(filepath: &str) -> (Vec<Reservation>, Vec<Zone>, Vec<Vehicle>)
         if i == amount_requests + 1 // get amount of zones
         {
             let mut string = String::from(contents[0].split(": ").collect::<Vec<&str>>()[1]);
-            if string.ends_with('\n')
+            if string.ends_with('\r')
             {
                 string.pop();
             }
-            if string.ends_with('\r')
+            if string.ends_with('\n')
             {
                 string.pop();
             }
