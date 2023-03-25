@@ -13,5 +13,5 @@ impl LocalSearch<'_>
     {
         LocalSearch { reservations: res, zones: zon, vehicle: veh }
     }
-
+    
 }
