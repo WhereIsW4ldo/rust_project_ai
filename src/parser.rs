@@ -40,7 +40,7 @@ pub fn read_file(filepath: &str) -> (Vec<Reservation>, Vec<Zone>, Vec<Vehicle>)
         if i <= amount_requests // read in all requests
         {
             let id: i32 = contents[0][3..].parse().unwrap();
-            // let zone: i32 = contents[1][1..].parse().unwrap();
+            let zone: i32 = contents[1][1..].parse().unwrap();
             let day: i32 = contents[2].parse().unwrap();
             let start: i32 = contents[3].parse().unwrap();
             let restime: i32 = contents[4].parse().unwrap();
@@ -54,7 +54,7 @@ pub fn read_file(filepath: &str) -> (Vec<Reservation>, Vec<Zone>, Vec<Vehicle>)
             let p1: i32 = contents[6].parse().unwrap();
             let string = contents[7];
             let p2: i32 = strip_trailing_newline(string).parse().unwrap();
-            let res: Reservation = Reservation { id, zone: &None, day, start, restime, possible_vehicles, p1, p2, vehicle: &None };
+            let res: Reservation = Reservation { id, zone, day, start, restime, possible_vehicles, p1, p2, vehicle: None};
 
             vec_reservations.push(res);
             continue;
@@ -91,7 +91,7 @@ pub fn read_file(filepath: &str) -> (Vec<Reservation>, Vec<Zone>, Vec<Vehicle>)
 
         if i <= amount_requests + amount_zones + amount_vehicles + 2
         {
-            vec_vehicles.push(Vehicle { id: strip_trailing_newline(&contents[0][3..]).parse().unwrap(), zone: &None });
+            vec_vehicles.push(Vehicle { id: strip_trailing_newline(&contents[0][3..]).parse().unwrap(), zone: None});
             continue;
         }
     }
