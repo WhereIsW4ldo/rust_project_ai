@@ -1,7 +1,7 @@
 use crate::data_structs::{Reservation, Vehicle, Zone};
 extern crate rand;
-use rand::{Rng, random};
-use std::{fs::File, io::Write, time::Instant, process::exit};
+use rand::{random, Rng, SeedableRng, rngs::StdRng};
+use std::{fs::File, io::Write, process::exit, time::Instant};
 
 pub struct LocalSearch {
     pub reservations: Vec<Reservation>,
@@ -56,11 +56,7 @@ impl LocalSearch {
         return false;
     }
 
-    fn set_vehicle_if_not_interfere(
-        &mut self,
-        res_1: usize,
-        veh: usize,
-    ) -> bool {
+    fn set_vehicle_if_not_interfere(&mut self, res_1: usize, veh: usize) -> bool {
         if !self.does_list_interfere(res_1, &self.veh_to_res[veh]) {
             if self.unassigned.contains(&(res_1 as i32)) {
                 self.veh_to_res[veh].push(res_1 as i32);
@@ -101,6 +97,7 @@ impl LocalSearch {
     }
 
     pub fn new(res: Vec<Reservation>, zon: Vec<Zone>, veh: Vec<Vehicle>) -> LocalSearch {
+
         let veh_to_zon: Vec<i32> = vec![-1; veh.len()];
         let mut veh_to_res: Vec<Vec<i32>> = vec![];
 
@@ -141,22 +138,20 @@ impl LocalSearch {
         }
     }
 
-    fn commit(&mut self)
-    {
+    fn commit(&mut self) {
         self.local_veh_to_res = self.veh_to_res.clone();
         self.local_veh_to_zon = self.veh_to_zon.clone();
         self.local_unassigned = self.unassigned.clone();
         self.local_cost = self.calculate_full_cost();
     }
 
-    fn restore(&mut self)
-    {
+    fn restore(&mut self) {
         self.veh_to_res = self.local_veh_to_res.clone();
         self.veh_to_zon = self.local_veh_to_zon.clone();
         self.unassigned = self.local_unassigned.clone();
     }
 
-    pub fn run(&mut self, time: i32) {
+    pub fn run(&mut self, time: i32, seed: i32) {
         self.initialise();
 
         let mut threshold = 0;
@@ -166,7 +161,15 @@ impl LocalSearch {
 
         self.optimise();
 
-        println!("cost_begin: {} and is: {}", self.best_cost, self.check_all());
+        let mut r = StdRng::seed_from_u64(seed as u64);
+
+        self.best_cost = self.local_cost;
+
+        println!(
+            "cost_begin: {} and is: {}",
+            self.best_cost,
+            self.check_all()
+        );
 
         let start_time = Instant::now();
 
@@ -174,32 +177,45 @@ impl LocalSearch {
 
         while start_time.elapsed().as_secs() < time as u64 {
             i += 1;
-            let mut better = false;
-            let vehicle_id = rand::thread_rng().gen_range(0..self.vehicle.len());
-            let neighbours = self.zones[self.veh_to_zon[vehicle_id]as usize].neighbours.clone();
+            let vehicle_id: usize = (r.gen::<u16>() % self.vehicle.len() as u16) as usize;
+            let neighbours = self.zones[self.veh_to_zon[vehicle_id] as usize]
+                .neighbours
+                .clone();
+            self.local_cost = self.calculate_full_cost();
 
-            // for zone_id in neighbours {
-            for zone_id in 0..self.zones.len() {
-                self.car_to_zone(vehicle_id as i32, self.zones[zone_id as usize].id);
-                let cost = self.calculate_full_cost();
+            for _ in 0..1 {
+                for zone_id in &neighbours {
+                // for zone_id in 0..self.zones.len() {
+                    self.car_to_zone(vehicle_id as i32, self.zones[*zone_id as usize].id);
+                    let cost = self.calculate_full_cost();
 
-                if self.check_all() && cost < self.best_cost  + threshold {
-                    self.commit();
-                    println!("\n    new self.best best found!");
-                    better = true;
-                } else {
+                    if self.check_all() && cost < self.local_cost + threshold {
+                        self.commit();
+                    } else {
+                        self.restore();
+                    }
+                }
+            }
+
+            for _ in 0..1 {
+                if self.optimise() {
+                    let cost = self.calculate_full_cost();
+                    if self.check_all() && cost < self.local_cost {
+                        self.commit();
+
+                        println!("\nnew best small cost: {}", self.local_cost);
+                        age = 1;
+                    }
+                }
+                else {
                     self.restore();
                 }
             }
 
-            let cost = self.calculate_full_cost();
-            if  better && self.check_all() {
-                println!("\nnew best cost found! {cost}; age: {age}");
+            if self.local_cost != self.best_cost && self.local_cost < self.best_cost + threshold && self.check_all() {
+                println!("\nnew best cost found! {}; age: {age}", self.local_cost);
 
-                self.commit();
-
-                if self.local_cost < self.best_cost
-                {
+                if self.local_cost < self.best_cost {
                     self.best_cost = self.local_cost;
                     self.best_unassigned = self.local_unassigned.clone();
                     self.best_veh_to_res = self.local_veh_to_res.clone();
@@ -212,65 +228,21 @@ impl LocalSearch {
                 age += 1;
                 print!("\rage: {age}");
                 let _ = std::io::stdout().flush();
-
-                if age > 30 {
-                    if self.optimise()
-                    {
-                        let cost = self.calculate_full_cost();
-                        if self.check_all() && cost < self.local_cost {
-                            let cost = self.calculate_full_cost();
-
-                            self.local_cost = cost;
-
-                            println!("\nnew best small cost: {cost}");
-                            self.commit();
-                            age = 1;
-
-                            if self.local_cost < self.best_cost
-                            {
-                                self.best_cost = self.local_cost;
-                                self.best_unassigned = self.local_unassigned.clone();
-                                self.best_veh_to_res = self.local_veh_to_res.clone();
-                                self.best_veh_to_zon = self.local_veh_to_zon.clone();
-                            }
-
-                        }
-                    }
-                    else {
-                        self.restore();
-                    }
-                }
             }
 
             threshold = 0;
 
-            // if age > 1000
-            // {
-            //     // reassign again because broken?
-            //     let vehicle_id1 = rand::thread_rng().gen_range(0..self.vehicle.len());
-            //     let mut vehicle_id2 = rand::thread_rng().gen_range(0..self.vehicle.len());
-            //     while vehicle_id1 == vehicle_id2
-            //     {
-            //         vehicle_id2 = rand::thread_rng().gen_range(0..self.vehicle.len());
-            //     }
-            //     let zone_1 = self.veh_to_zon[vehicle_id1];
-            //     let zone_2 = self.veh_to_zon[vehicle_id2];
-            //     self.car_to_zone(vehicle_id1 as i32, self.zones[zone_2 as usize].id);
-            //     self.car_to_zone(vehicle_id2 as i32, self.zones[zone_1 as usize].id);
-            // }
-
-            if age > 100 {
+            if age > 10 {
                 threshold = 70;
             }
-            // if age > 200 {
-            //     threshold = 70;
-            // }
-            // if age > 300 {
-            //     threshold = 100;
-            // }
+            if age > 200 {
+                threshold = 70;
+            }
+            if age > 300 {
+                threshold = 100;
+            }
         }
 
-        self.best_cost = self.calculate_full_cost();
         println!("\ncost_end: {} after {i} iterations", self.best_cost);
     }
 
@@ -280,41 +252,35 @@ impl LocalSearch {
             self.small_operator(i as i32);
             let cost = self.calculate_full_cost();
 
-            if cost < self.best_cost {
-                self.commit();
+            if cost < self.local_cost {
+                // self.commit();
                 changed = true;
-            } else {
-                self.restore();
             }
+            // } else {
+            // self.restore();
+            // }
         }
         changed
     }
 
-    fn check_all(&self) -> bool
-    {
+    fn check_all(&self) -> bool {
         let amount_res = self.reservations.len();
         let mut res = 0;
-        for reservations in &self.veh_to_res
-        {
+        for reservations in &self.veh_to_res {
             res += reservations.len();
-            for res_1 in reservations
-            {
-                for res_2 in reservations
-                {
-                    if res_1 == res_2
-                    {
+            for res_1 in reservations {
+                for res_2 in reservations {
+                    if res_1 == res_2 {
                         continue;
                     }
-                    if self.does_interfere(*res_1 as usize, *res_2 as usize)
-                    {
+                    if self.does_interfere(*res_1 as usize, *res_2 as usize) {
                         return false;
                     }
                 }
             }
         }
         res += self.unassigned.len();
-        if res != amount_res
-        {
+        if res != amount_res {
             return false;
         }
         true
@@ -340,7 +306,7 @@ impl LocalSearch {
         for veh in 0..self.veh_to_zon.len() {
             // check for vehicle in same zone as res_id
             if self.veh_to_zon[veh] == zon_res {
-                if self.does_list_interfere(res_id as usize, &self.veh_to_res[veh]) {
+                if self.vehicle_possible_own(veh as usize, res_id as usize) {
                     if self.set_vehicle_if_not_interfere(res_id as usize, veh) {
                         if self.unassigned.contains(&res_id) {
                             assigned.push(res_id);
@@ -368,10 +334,8 @@ impl LocalSearch {
         // assign all reservations in own zone
         let unnassigned_copy = self.unassigned.clone();
 
-        for res in unnassigned_copy
-        {
-            if self.vehicle_possible_own(veh_id as usize, res as usize)
-            {
+        for res in unnassigned_copy {
+            if self.vehicle_possible_own(veh_id as usize, res as usize) {
                 self.set_vehicle_if_not_interfere(res as usize, veh_id as usize);
             }
         }
@@ -379,36 +343,28 @@ impl LocalSearch {
         let unnassigned_copy = self.unassigned.clone();
 
         // assign all neighbouring reservations to vehicle
-        for res in unnassigned_copy
-        {
-            if self.vehicle_possible_neighbour(veh_id as usize, res as usize)
-            {
+        for res in unnassigned_copy {
+            if self.vehicle_possible_neighbour(veh_id as usize, res as usize) {
                 self.set_vehicle_if_not_interfere(res as usize, veh_id as usize);
             }
         }
 
         let unnassigned_copy = self.unassigned.clone();
-        for res in unnassigned_copy
-        {
+        for res in unnassigned_copy {
             let zone = self.reservations[res as usize].zone;
             // loop through all vehicles and check if the zone of the reservation is the same as the zone of res
-            for z_index in 0..self.veh_to_zon.len()
-            {
-                if self.veh_to_zon[z_index] == zone
-                {
-                    if self.vehicle_possible_own(z_index as usize, res as usize)
-                    {
+            for z_index in 0..self.veh_to_zon.len() {
+                if self.veh_to_zon[z_index] == zone {
+                    if self.vehicle_possible_own(z_index as usize, res as usize) {
                         self.set_vehicle_if_not_interfere(res as usize, z_index);
                     }
                 }
             }
         }
 
-        for reservations in &mut self.veh_to_res
-        {
+        for reservations in &mut self.veh_to_res {
             reservations.dedup();
         }
-
     }
 
     pub fn initialise(&mut self) {
@@ -458,8 +414,7 @@ impl LocalSearch {
             }
         }
 
-        for reservations in &mut self.veh_to_res
-        {
+        for reservations in &mut self.veh_to_res {
             reservations.dedup();
         }
     }
@@ -468,7 +423,13 @@ impl LocalSearch {
         let mut sum = 0;
         for (veh_id, reservations) in self.veh_to_res.iter().enumerate() {
             for res in reservations {
-                sum += self.calculate_cost(*res, veh_id);
+                if self.unassigned.contains(res)
+                {
+                    sum += self.reservations[*res as usize].p1;
+                }
+                else {
+                    sum += self.calculate_cost(*res, veh_id);                    
+                }
             }
         }
         for res in &self.unassigned {
@@ -483,10 +444,10 @@ impl LocalSearch {
 
         if *zon_veh == *zon_res {
             return 0;
+        } else if self.zones[*zon_veh as usize].neighbours.contains(zon_res) {
+            return self.reservations[res_id as usize].p2;
         }
-        // } else if self.zones[*zon_veh as usize].neighbours.contains(zon_res) {
-        return self.reservations[res_id as usize].p2;
-        // }
+        return self.reservations[res_id as usize].p1;
     }
 
     pub fn write_output(&self, filename: &str) -> std::io::Result<()> {
@@ -494,19 +455,19 @@ impl LocalSearch {
 
         file.write(format!("{}\n", self.best_cost).as_bytes())?;
         file.write(b"+Vehicle assignments\n")?;
-        for (i, zone) in self.veh_to_zon.iter().enumerate() {
+        for (i, zone) in self.best_veh_to_zon.iter().enumerate() {
             file.write(format!("car{};z{}\n", i, zone).as_bytes())?;
         }
 
         file.write(b"+Assigned requests\n")?;
-        for (i, veh) in self.veh_to_res.iter().enumerate() {
+        for (i, veh) in self.best_veh_to_res.iter().enumerate() {
             for req in veh {
                 file.write(format!("req{};car{}\n", req, i).as_bytes())?;
             }
         }
 
         file.write(b"+Unassigned requests\n")?;
-        for res in &self.unassigned {
+        for res in &self.best_unassigned {
             file.write(format!("req{}\n", res).as_bytes())?;
         }
         Ok(())
