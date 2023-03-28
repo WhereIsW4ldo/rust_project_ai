@@ -1,7 +1,9 @@
 use crate::data_structs::{Reservation, Vehicle, Zone};
 extern crate rand;
-use rand::{random, Rng, SeedableRng, rngs::StdRng};
-use std::{fs::File, io::Write, process::exit, time::Instant};
+use rand::{Rng};
+use rand::rngs::{StdRng};
+use rand::SeedableRng;
+use std::{fs::File, io::Write, time::Instant};
 
 pub struct LocalSearch {
     pub reservations: Vec<Reservation>,
