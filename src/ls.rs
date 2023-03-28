@@ -61,7 +61,6 @@ impl LocalSearch {
     fn set_vehicle_if_not_interfere(&mut self, res_1: usize, veh: usize) -> bool {
         if !self.does_list_interfere(res_1, &self.veh_to_res[veh]) {
             if self.unassigned.contains(&(res_1 as i32)) {
-                self.veh_to_res[veh].push(res_1 as i32);
                 self.assign_veh_to_res(veh as i32, res_1 as i32);
                 return true;
             }
