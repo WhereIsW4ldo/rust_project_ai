@@ -205,7 +205,7 @@ impl LocalSearch {
                     if self.check_all() && cost < self.local_cost {
                         self.commit();
 
-                        println!("\nnew best small cost: {}", self.local_cost);
+                        // println!("\nnew best small cost: {}", self.local_cost);
                         age = 1;
                     }
                 }
@@ -215,7 +215,7 @@ impl LocalSearch {
             }
 
             if self.local_cost != self.best_cost && self.local_cost < self.best_cost + threshold && self.check_all() {
-                println!("\nnew best cost found! {}; age: {age}", self.local_cost);
+                // println!("\nnew best cost found! {}; age: {age}", self.local_cost);
 
                 if self.local_cost < self.best_cost {
                     self.best_cost = self.local_cost;
@@ -228,7 +228,7 @@ impl LocalSearch {
 
             } else {
                 age += 1;
-                print!("\rage: {age}");
+                // print!("\rage: {age}");
                 let _ = std::io::stdout().flush();
             }
 
