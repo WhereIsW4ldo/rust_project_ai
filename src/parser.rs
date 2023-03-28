@@ -13,7 +13,7 @@ fn strip_trailing_newline(input: &str) -> &str
 pub fn read_file(filepath: &str) -> (Vec<Reservation>, Vec<Zone>, Vec<Vehicle>)
 {
     // (Vec<data_structs::Reservation>, Vec<data_structs::Zone>, Vec<data_structs::Vehicle>, Vec<Vec<bool>>)
-    println!("Contents of file {}:", filepath);
+    // println!("Contents of file {}:", filepath);
 
     let lines = fs::read_to_string(filepath)
                     .expect("could not read file");
@@ -33,7 +33,7 @@ pub fn read_file(filepath: &str) -> (Vec<Reservation>, Vec<Zone>, Vec<Vehicle>)
         {
             let string = contents[0].split(": ").collect::<Vec<&str>>()[1];
             amount_requests = strip_trailing_newline(string).parse().unwrap();
-            println!("amount_requests: {amount_requests}");
+            // println!("amount_requests: {amount_requests}");
             continue;
         }
 
@@ -64,7 +64,7 @@ pub fn read_file(filepath: &str) -> (Vec<Reservation>, Vec<Zone>, Vec<Vehicle>)
         {
             let string = contents[0].split(": ").collect::<Vec<&str>>()[1];
             amount_zones = strip_trailing_newline(string).parse().unwrap();
-            println!("amount_zones: {amount_zones}");
+            // println!("amount_zones: {amount_zones}");
             continue;
         }
 
@@ -85,7 +85,7 @@ pub fn read_file(filepath: &str) -> (Vec<Reservation>, Vec<Zone>, Vec<Vehicle>)
         {
             let string = contents[0].split(": ").collect::<Vec<&str>>()[1];
             amount_vehicles = strip_trailing_newline(string).parse().unwrap();
-            println!("amount_vehicles: {amount_vehicles}");
+            // println!("amount_vehicles: {amount_vehicles}");
             continue;
         }
 
