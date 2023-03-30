@@ -12,7 +12,7 @@ fn main() {
     let (res, zone, veh) = parser::read_file(&input_filename);
 
     let mut ls = ls::LocalSearch::new(res, zone, veh);
-    ls.run(time.parse::<i32>().expect("No number given as time"), seed.parse::<i32>().expect("No number given as seed"));
+    ls.run(time.parse::<i32>().expect("No number given as time"), seed.parse::<u64>().expect("No number given as seed"));
 
     let _ = ls.write_output(&output_filename);
 }
