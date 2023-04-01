@@ -171,11 +171,11 @@ impl LocalSearch {
 
         self.best_cost = self.local_cost;
 
-        println!(
-            "cost_begin: {} and is: {}",
-            self.best_cost,
-            self.check_all()
-        );
+        //println!(
+            //"cost_begin: {} and is: {}",
+            //self.best_cost,
+            //self.check_all()
+        //);
 
         let start_time = Instant::now();
 
@@ -207,7 +207,7 @@ impl LocalSearch {
             }
 
             if self.local_cost != self.best_cost && self.local_cost < self.best_cost + threshold && self.check_all() {
-                println!("\nnew best cost found! {}; age: {age}", self.local_cost);
+                // println!("\nnew best cost found! {}; age: {age}", self.local_cost);
 
                 if self.local_cost < self.best_cost {
                     self.best_cost = self.local_cost;
