@@ -12,8 +12,6 @@ fn strip_trailing_newline(input: &str) -> &str
 
 pub fn read_file(filepath: &str) -> (Vec<Reservation>, Vec<Zone>, Vec<Vehicle>)
 {
-    // (Vec<data_structs::Reservation>, Vec<data_structs::Zone>, Vec<data_structs::Vehicle>, Vec<Vec<bool>>)
-    // println!("Contents of file {}:", filepath);
 
     let lines = fs::read_to_string(filepath)
                     .expect("could not read file");
@@ -42,7 +40,7 @@ pub fn read_file(filepath: &str) -> (Vec<Reservation>, Vec<Zone>, Vec<Vehicle>)
             let id: i32 = contents[0][3..].parse().unwrap();
             let zone: i32 = contents[1][1..].parse().unwrap();
             let day: i32 = contents[2].parse().unwrap();
-            let start: i32 = contents[3].parse().unwrap();
+            let start: i32 = contents[3].parse::<i32>().unwrap() + 1440*day;
             let restime: i32 = contents[4].parse().unwrap();
             let pos_veh: Vec<&str> = contents[5].split(',').collect();
             let mut possible_vehicles: Vec<i32> = Vec::new();
